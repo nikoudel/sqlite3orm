@@ -49,7 +49,7 @@ func (w DBWrapper) Insert(instance interface{}) error {
 		fmt.Println(buffer.String())		
 	}
 
-    _, err := w.DB.Exec(buffer.String(), params...)
+    _, err := w.SqlDB.Exec(buffer.String(), params...)
     
     if err != nil {
         return err

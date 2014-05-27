@@ -10,7 +10,7 @@ import (
 )
 
 type DBWrapper struct {
-	DB *sql.DB
+	SqlDB *sql.DB
 	isDebug bool
 }
 
@@ -71,7 +71,7 @@ func (w DBWrapper) CreateTable(instance interface{}) error {
 		fmt.Println(buffer.String())		
 	}
 
-    _, err := w.DB.Exec(buffer.String())
+    _, err := w.SqlDB.Exec(buffer.String())
     
     if err != nil {
         return err
@@ -121,7 +121,7 @@ func createIndex(indexMap map[string][]string, typeName string, w DBWrapper) err
 			fmt.Println(buffer.String())		
 		}
 
-    	_, err := w.DB.Exec(buffer.String())
+    	_, err := w.SqlDB.Exec(buffer.String())
     
 	    if err != nil {
 	        return err

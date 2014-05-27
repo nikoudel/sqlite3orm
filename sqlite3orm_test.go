@@ -26,9 +26,9 @@ func TestCreateInsertSelect(test *testing.T) {
 		return
 	}
 
-	w := DBWrapper{DB: db, isDebug: true}
+	w := DBWrapper{SqlDB: db, isDebug: true}
 
-    defer w.DB.Close()
+    defer w.SqlDB.Close()
 
 	instance := TestStruct{String: "abc", Float: 1.23, Uint: 123, Bool: true, Time: DBTime{Time: time.Now()}}
 

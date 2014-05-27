@@ -78,7 +78,7 @@ func (w DBWrapper) selectRows(slice *reflect.Value, where string, getOnlyFirst b
 
     fmt.Println(buffer.String())
 
-    rows, err := w.DB.Query(buffer.String())
+    rows, err := w.SqlDB.Query(buffer.String())
 
     if err != nil {
         return err
