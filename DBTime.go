@@ -1,10 +1,10 @@
 package sqlite3orm
 
 import (
-    "fmt"
-    "errors"
-    "time"
-    "database/sql/driver"
+	"database/sql/driver"
+	"errors"
+	"fmt"
+	"time"
 )
 
 type DBTime struct {
@@ -12,34 +12,34 @@ type DBTime struct {
 }
 
 func (t *DBTime) Scan(src interface{}) error {
-	
+
 	if src != nil {
 
 		switch v := src.(type) {
 
-		    case time.Time:
-		        t.Time = src.(time.Time)
+		case time.Time:
+			t.Time = src.(time.Time)
 
-		    case []uint8:
+		case []uint8:
 
-		    	var err error
+			var err error
 
-		        t.Time, err = time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", string(src.([]uint8)))
+			t.Time, err = time.Parse("2006-01-02 15:04:05.999999999 -0700 MST", string(src.([]uint8)))
 
-		        if err != nil {
-		        	return err
-		        }
+			if err != nil {
+				return err
+			}
 
-	        default:
-		        return errors.New(fmt.Sprintf("failed parsing a time.Time; unexpected type %T", v))
-	    }
+		default:
+			return errors.New(fmt.Sprintf("failed parsing a time.Time; unexpected type %T", v))
+		}
 	}
 
 	return nil
 }
 
 func (t DBTime) String() string {
-    return fmt.Sprintf("%v", t.Time)
+	return fmt.Sprintf("%v", t.Time)
 }
 
 func (t DBTime) Value() (driver.Value, error) {

@@ -1,14 +1,14 @@
 package sqlite3orm
 
 import (
-    "fmt"
-    "reflect"
-    "bytes"
-    "errors"
+	"bytes"
+	"errors"
+	"fmt"
+	"reflect"
 )
 
 func (w DBWrapper) Insert(instance interface{}) error {
-	
+
 	var buffer bytes.Buffer
 	var values bytes.Buffer
 	var params []interface{}
@@ -16,8 +16,8 @@ func (w DBWrapper) Insert(instance interface{}) error {
 	v := reflect.ValueOf(instance)
 
 	if v.Kind() != reflect.Ptr {
-        return errors.New("expecting a pointer")
-    }
+		return errors.New("expecting a pointer")
+	}
 
 	el := v.Elem()
 
@@ -46,14 +46,14 @@ func (w DBWrapper) Insert(instance interface{}) error {
 	buffer.WriteString(")")
 
 	if w.isDebug {
-		fmt.Println(buffer.String())		
+		fmt.Println(buffer.String())
 	}
 
-    _, err := w.SqlDB.Exec(buffer.String(), params...)
-    
-    if err != nil {
-        return err
-    }
+	_, err := w.SqlDB.Exec(buffer.String(), params...)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -1,16 +1,16 @@
 package sqlite3orm
 
 import (
-    "fmt"
-    "reflect"
-    "errors"
-    "bytes"
-    "database/sql"
-    _ "github.com/mattn/go-sqlite3"
+	"bytes"
+	"database/sql"
+	"errors"
+	"fmt"
+	_ "github.com/mattn/go-sqlite3"
+	"reflect"
 )
 
 type DBWrapper struct {
-	SqlDB *sql.DB
+	SqlDB   *sql.DB
 	isDebug bool
 }
 
@@ -24,14 +24,14 @@ func (w DBWrapper) CreateTable(instance interface{}) error {
 	t := v.Type()
 
 	if t.Kind() == reflect.Ptr {
-        t = v.Elem().Type()
-    }
+		t = v.Elem().Type()
+	}
 
-    if t.Kind() == reflect.Slice {
-    	return errors.New("not expecting a slice")
-    }
+	if t.Kind() == reflect.Slice {
+		return errors.New("not expecting a slice")
+	}
 
-	buffer.WriteString(fmt.Sprintf("CREATE TABLE %s (", t.Name()))		
+	buffer.WriteString(fmt.Sprintf("CREATE TABLE %s (", t.Name()))
 
 	for i := 0; i < t.NumField(); i++ {
 
@@ -65,23 +65,23 @@ func (w DBWrapper) CreateTable(instance interface{}) error {
 		}
 	}
 
-	buffer.WriteString(")")	
+	buffer.WriteString(")")
 
 	if w.isDebug {
-		fmt.Println(buffer.String())		
+		fmt.Println(buffer.String())
 	}
 
-    _, err := w.SqlDB.Exec(buffer.String())
-    
-    if err != nil {
-        return err
-    }
+	_, err := w.SqlDB.Exec(buffer.String())
+
+	if err != nil {
+		return err
+	}
 
 	return createIndex(indexMap, t.Name(), w)
 }
 
 func mapSqliteType(instance interface{}) (string, error) {
-	
+
 	switch t := instance.(type) {
 
 	case string, DBTime:
@@ -92,7 +92,7 @@ func mapSqliteType(instance interface{}) (string, error) {
 
 	case float32, float64:
 		return "REAL", nil
-		
+
 	default:
 		return "", errors.New(fmt.Sprintf("unknown type: %T", t))
 	}
@@ -106,26 +106,26 @@ func createIndex(indexMap map[string][]string, typeName string, w DBWrapper) err
 
 		buffer.WriteString(fmt.Sprintf("CREATE INDEX %s ON %s (", index, typeName))
 
-    	for i, field := range fields {
+		for i, field := range fields {
 
-    		if i > 0 {
-    			buffer.WriteString(", ")
-    		}
+			if i > 0 {
+				buffer.WriteString(", ")
+			}
 
-    		buffer.WriteString(field)
-    	}
-
-    	buffer.WriteString(")")
-
-		if w.isDebug {
-			fmt.Println(buffer.String())		
+			buffer.WriteString(field)
 		}
 
-    	_, err := w.SqlDB.Exec(buffer.String())
-    
-	    if err != nil {
-	        return err
-	    }
+		buffer.WriteString(")")
+
+		if w.isDebug {
+			fmt.Println(buffer.String())
+		}
+
+		_, err := w.SqlDB.Exec(buffer.String())
+
+		if err != nil {
+			return err
+		}
 
 		buffer.Reset()
 	}

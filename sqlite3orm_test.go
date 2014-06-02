@@ -1,25 +1,25 @@
 package sqlite3orm
 
 import (
-    "testing"
-    "os"
-    "time"
-    "database/sql"
+	"database/sql"
+	"os"
+	"testing"
+	"time"
 )
 
 type TestStruct struct {
-    String string `index:"ix_string_time"`
-    Float float64
-    Uint uint64
-    Bool bool
-    Time DBTime `index:"ix_string_time"`
+	String string `index:"ix_string_time"`
+	Float  float64
+	Uint   uint64
+	Bool   bool
+	Time   DBTime `index:"ix_string_time"`
 }
 
 func TestCreateInsertSelect(test *testing.T) {
 
 	os.Remove("./test.db")
 
-    db, err := sql.Open("sqlite3", "./test.db")
+	db, err := sql.Open("sqlite3", "./test.db")
 
 	if err != nil {
 		test.Errorf("failed opening database: %v\n", err)
@@ -28,7 +28,7 @@ func TestCreateInsertSelect(test *testing.T) {
 
 	w := DBWrapper{SqlDB: db, isDebug: true}
 
-    defer w.SqlDB.Close()
+	defer w.SqlDB.Close()
 
 	instance := TestStruct{String: "abc", Float: 1.23, Uint: 123, Bool: true, Time: DBTime{Time: time.Now()}}
 

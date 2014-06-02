@@ -1,146 +1,146 @@
 package sqlite3orm
 
 import (
-    "fmt"
-    "reflect"
-    "errors"
-    "bytes"
-    "database/sql"
+	"bytes"
+	"database/sql"
+	"errors"
+	"fmt"
+	"reflect"
 )
 
 func (w DBWrapper) Select(instance interface{}, where string) error {
 
-    slice, err := getElem(instance, true)
+	slice, err := getElem(instance, true)
 
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    tmp := reflect.Zero(reflect.SliceOf(slice.Type().Elem()))
+	tmp := reflect.Zero(reflect.SliceOf(slice.Type().Elem()))
 
-    err = w.selectRows(&tmp, where, false)
+	err = w.selectRows(&tmp, where, false)
 
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    slice.Set(tmp)
+	slice.Set(tmp)
 
-    return nil
+	return nil
 }
 
 func (w DBWrapper) SelectFirst(instance interface{}, where string) error {
 
-    el, err := getElem(instance, false)
+	el, err := getElem(instance, false)
 
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    slice := reflect.Zero(reflect.SliceOf(el.Type()))
+	slice := reflect.Zero(reflect.SliceOf(el.Type()))
 
-    if err := w.selectRows(&slice, where, true); err != nil {
-        return err
-    }
+	if err := w.selectRows(&slice, where, true); err != nil {
+		return err
+	}
 
-    if slice.Len() > 0 {
-        el.Set(slice.Index(0))
-    } else {
-        return errors.New("empty result")
-    }
+	if slice.Len() > 0 {
+		el.Set(slice.Index(0))
+	} else {
+		return errors.New("empty result")
+	}
 
-    return nil
+	return nil
 }
 
 func (w DBWrapper) selectRows(slice *reflect.Value, where string, getOnlyFirst bool) error {
 
-    sliceItemType := slice.Type().Elem()
+	sliceItemType := slice.Type().Elem()
 
-    var buffer bytes.Buffer
+	var buffer bytes.Buffer
 
-    buffer.WriteString("SELECT ")
+	buffer.WriteString("SELECT ")
 
-    for i := 0; i < sliceItemType.NumField(); i++ {
+	for i := 0; i < sliceItemType.NumField(); i++ {
 
-        if i > 0 {
-            buffer.WriteString(", ")
-        }
+		if i > 0 {
+			buffer.WriteString(", ")
+		}
 
-        buffer.WriteString(sliceItemType.Field(i).Name)
-    }
+		buffer.WriteString(sliceItemType.Field(i).Name)
+	}
 
-    buffer.WriteString(fmt.Sprintf(" FROM %s", sliceItemType.Name()))
+	buffer.WriteString(fmt.Sprintf(" FROM %s", sliceItemType.Name()))
 
-    if where != "" {
-        buffer.WriteString(" WHERE ")
-        buffer.WriteString(where)
-    }
+	if where != "" {
+		buffer.WriteString(" WHERE ")
+		buffer.WriteString(where)
+	}
 
-    fmt.Println(buffer.String())
+	fmt.Println(buffer.String())
 
-    rows, err := w.SqlDB.Query(buffer.String())
+	rows, err := w.SqlDB.Query(buffer.String())
 
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
-    defer rows.Close()
+	defer rows.Close()
 
-    for rows.Next() {
+	for rows.Next() {
 
-        if err = addItem(rows, slice); err != nil {
-            return err
-        }
+		if err = addItem(rows, slice); err != nil {
+			return err
+		}
 
-        if getOnlyFirst {
-            return nil
-        }
-    }
+		if getOnlyFirst {
+			return nil
+		}
+	}
 
-    return nil
+	return nil
 }
 
 func getElem(instance interface{}, isSliceExpected bool) (reflect.Value, error) {
-    
-    p := reflect.ValueOf(instance)
 
-    if p.Kind() != reflect.Ptr {
-        return p, errors.New("expecting a pointer")
-    }
+	p := reflect.ValueOf(instance)
 
-    elem := p.Elem()
+	if p.Kind() != reflect.Ptr {
+		return p, errors.New("expecting a pointer")
+	}
 
-    if isSliceExpected && elem.Kind() != reflect.Slice {
-        return elem, errors.New("expecting a pointer to a slice")
-    }
+	elem := p.Elem()
 
-    if !isSliceExpected && elem.Kind() == reflect.Slice {
-        return elem, errors.New("not expecting a slice")
-    }
+	if isSliceExpected && elem.Kind() != reflect.Slice {
+		return elem, errors.New("expecting a pointer to a slice")
+	}
 
-    return elem, nil
+	if !isSliceExpected && elem.Kind() == reflect.Slice {
+		return elem, errors.New("not expecting a slice")
+	}
+
+	return elem, nil
 }
 
 func addItem(rows *sql.Rows, slice *reflect.Value) error {
 
-    sliceItemType := slice.Type().Elem()
+	sliceItemType := slice.Type().Elem()
 
-    pItem := reflect.New(sliceItemType)
+	pItem := reflect.New(sliceItemType)
 
-    item := pItem.Elem()
+	item := pItem.Elem()
 
-    dest := make([]interface{}, item.NumField())
+	dest := make([]interface{}, item.NumField())
 
-    for i := 0; i < item.NumField(); i++ {
+	for i := 0; i < item.NumField(); i++ {
 
-        dest[i] = item.Field(i).Addr().Interface()
-    }
+		dest[i] = item.Field(i).Addr().Interface()
+	}
 
-    if err := rows.Scan(dest...); err != nil {
-        return err
-    }
+	if err := rows.Scan(dest...); err != nil {
+		return err
+	}
 
-    *slice = reflect.Append(*slice, item)
+	*slice = reflect.Append(*slice, item)
 
-    return nil
+	return nil
 }
